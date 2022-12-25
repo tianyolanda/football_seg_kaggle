@@ -94,7 +94,6 @@ def concat_lenends(seg_img, legend_img):
 
     return out_img
 
-
 def visualize_segmentation(seg_arr, inp_img=None, n_classes=None,
                            colors=class_colors, class_names=None,
                            overlay_img=False, show_legends=False,
@@ -102,6 +101,25 @@ def visualize_segmentation(seg_arr, inp_img=None, n_classes=None,
 
     if n_classes is None:
         n_classes = np.max(seg_arr)
+
+    color_list = [(0, 0, 0), # 背景: Background
+              (0, 159, 255), #  橘色: Team A
+              (47,255,173), # 绿色（改变），原 ：[1, 160, 255]橘色: Goalkeeper A  
+              (0, 235, 255), #  黄: Team B
+              (255, 255, 6), # 青蓝色 （改变）， 原：[3, 233, 254] 黄色: Goalkeeper B 
+              (171, 171, 238), # 粉色: Referee
+              (223, 19, 201), # 亮紫罗兰: Ball
+              (29, 0, 255), # 红色: Goal Bar
+              (253, 48, 111), # 紫色: Audience
+              (151, 71, 27), # 深蓝色: Advertisement
+              (126, 126, 137), # 灰色: Ground,
+                     ]
+    colors = color_list + colors
+
+    class_list = [0, 1,2,3,4,5,6,7,8,9,10]
+    class_name_list = ['Background', 'Team A', 'Team B', 'Goalkeeper A', 'Goalkeeper B',
+                    'Referee', 'Ball', 'Goal Bar', 'Audience', 
+                    'Advertisement', 'Ground']
 
     seg_img = get_colored_segmentation_image(seg_arr, n_classes, colors=colors)
 
@@ -127,7 +145,6 @@ def visualize_segmentation(seg_arr, inp_img=None, n_classes=None,
         seg_img = concat_lenends(seg_img, legend_img)
 
     return seg_img
-
 
 def predict(model=None, inp=None, out_fname=None,
             checkpoints_path=None, overlay_img=False,
@@ -170,6 +187,46 @@ def predict(model=None, inp=None, out_fname=None,
 
     return pr
 
+def predict_maps(model=None, inp=None, out_fname=None,
+            checkpoints_path=None, overlay_img=False,
+            class_names=None, show_legends=False, colors=class_colors,
+            prediction_width=None, prediction_height=None,
+            read_image_type=1):
+
+    if model is None and (checkpoints_path is not None):
+        model = model_from_checkpoint_path(checkpoints_path)
+
+    assert (inp is not None)
+    assert ((type(inp) is np.ndarray) or isinstance(inp, six.string_types)),\
+        "Input should be the CV image or the input file name"
+
+    if isinstance(inp, six.string_types):
+        inp = cv2.imread(inp, read_image_type)
+
+    assert (len(inp.shape) == 3 or len(inp.shape) == 1 or len(inp.shape) == 4), "Image should be h,w,3 "
+
+    output_width = model.output_width
+    output_height = model.output_height
+    input_width = model.input_width
+    input_height = model.input_height
+    n_classes = model.n_classes
+
+    x = get_image_array(inp, input_width, input_height,
+                        ordering=IMAGE_ORDERING)
+    pr = model.predict(np.array([x]))[0]
+    pr = pr.reshape((output_height,  output_width, n_classes)).argmax(axis=2)
+
+    seg_img = visualize_segmentation(pr, inp, n_classes=n_classes,
+                                     colors=colors, overlay_img=overlay_img,
+                                     show_legends=show_legends,
+                                     class_names=class_names,
+                                     prediction_width=prediction_width,
+                                     prediction_height=prediction_height)
+
+    # if out_fname is not None:
+        # cv2.imwrite(out_fname, seg_img)
+
+    return seg_img
 
 def predict_multiple(model=None, inps=None, inp_dir=None, out_dir=None,
                      checkpoints_path=None, overlay_img=False,

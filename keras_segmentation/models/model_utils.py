@@ -7,7 +7,7 @@ from tqdm import tqdm
 
 from .config import IMAGE_ORDERING
 from ..train import train
-from ..predict import predict, predict_multiple, evaluate
+from ..predict import predict, predict_multiple, predict_maps, evaluate
 
 
 # source m1 , dest m2
@@ -99,6 +99,7 @@ def get_segmentation_model(input, output):
 
     model.train = MethodType(train, model)
     model.predict_segmentation = MethodType(predict, model)
+    model.predict_maps = MethodType(predict_maps, model)
     model.predict_multiple = MethodType(predict_multiple, model)
     model.evaluate_segmentation = MethodType(evaluate, model)
 
