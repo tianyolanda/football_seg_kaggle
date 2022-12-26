@@ -25,6 +25,7 @@ def model_from_checkpoint_path(checkpoints_path):
             ), "Checkpoint not found."
     model_config = json.loads(
         open(checkpoints_path+"_config.json", "r").read())
+    # checkpoints_path = '/Users/yutian/Desktop/kaggle/keras-seg/image-segmentation-keras-master/checkpoints/from_kaggle/vgg_unet.h5'
     latest_weights = find_latest_checkpoint(checkpoints_path)
     assert (latest_weights is not None), "Checkpoint not found."
     model = model_from_name[model_config['model_class']](
@@ -225,6 +226,7 @@ def predict_maps(model=None, inp=None, out_fname=None,
 
     # if out_fname is not None:
         # cv2.imwrite(out_fname, seg_img)
+    seg_img = seg_img.astype('uint8')
 
     return seg_img
 
