@@ -9,6 +9,8 @@ from keras.callbacks import ModelCheckpoint
 import tensorflow as tf
 import glob
 import sys
+from tensorflow.keras import backend as K
+from .multiclass_losses import weighted_categorical_crossentropy, dice_coef_loss, soft_dice_loss, multiclass_weighted_tanimoto_loss, multiclass_weighted_dice_loss, multiclass_weighted_squared_dice_loss, multiclass_weighted_cross_entropy, multiclass_focal_loss
 
 def find_latest_checkpoint(checkpoints_path, fail_safe=True):
 
@@ -19,11 +21,13 @@ def find_latest_checkpoint(checkpoints_path, fail_safe=True):
 
     # Get all matching files
     all_checkpoint_files = glob.glob(checkpoints_path + ".*")
+
     if len(all_checkpoint_files) == 0:
         all_checkpoint_files = glob.glob(checkpoints_path + "*.*")
     all_checkpoint_files = [ff.replace(".index", "") for ff in
                             all_checkpoint_files]  # to make it work for newer versions of keras
     # Filter out entries where the epoc_number part is pure number
+
     all_checkpoint_files = list(filter(lambda f: get_epoch_number_from_path(f)
                                        .isdigit(), all_checkpoint_files))
     if not len(all_checkpoint_files):
@@ -38,7 +42,6 @@ def find_latest_checkpoint(checkpoints_path, fail_safe=True):
     latest_epoch_checkpoint = max(all_checkpoint_files,
                                   key=lambda f:
                                   int(get_epoch_number_from_path(f)))
-
     return latest_epoch_checkpoint
 
 def masked_categorical_crossentropy(gt, pr):
@@ -65,6 +68,8 @@ def train(model,
           n_classes=None,
           verify_dataset=True,
           checkpoints_path=None,
+          loss_fun=None,
+          loss_class_weights=None,
           epochs=5,
           batch_size=2,
           validate=False,
@@ -109,13 +114,45 @@ def train(model,
         assert val_images is not None
         assert val_annotations is not None
 
-    if optimizer_name is not None:
+    if loss_fun is not None:
+        assert (loss_class_weights is not None), "loss_class_weights not defined."
 
+        if loss_fun == 'weighted_categorical_crossentropy':
+            loss_k = weighted_categorical_crossentropy(loss_class_weights)
+
+        elif loss_fun == 'dice_coef_loss':
+            loss_k = dice_coef_loss(loss_class_weights)
+
+        elif loss_fun == 'soft_dice_loss':
+            loss_k = soft_dice_loss(loss_class_weights)
+
+        elif loss_fun == 'multiclass_weighted_tanimoto_loss':
+            loss_k = multiclass_weighted_tanimoto_loss(loss_class_weights)
+
+        elif loss_fun == 'multiclass_weighted_dice_loss':
+            loss_k = multiclass_weighted_dice_loss(loss_class_weights)
+
+        elif loss_fun == 'multiclass_weighted_squared_dice_loss':
+            loss_k = multiclass_weighted_squared_dice_loss(loss_class_weights)
+
+        elif loss_fun == 'multiclass_weighted_cross_entropy':
+            loss_k = multiclass_weighted_cross_entropy(loss_class_weights)
+
+        elif loss_fun == 'multiclass_focal_loss':
+            assert (len(loss_class_weights) == 2 ), "loss_class_weights, gamma not defined."
+            loss_k = multiclass_focal_loss(loss_class_weights[0], loss_class_weights[1])
+
+        else:
+            print('loss not defined')
+
+    else: 
         if ignore_zero_class:
             loss_k = masked_categorical_crossentropy
         else:
             loss_k = 'categorical_crossentropy'
 
+                    
+    if optimizer_name is not None:
         model.compile(loss=loss_k,
                       optimizer=optimizer_name,
                       metrics=['accuracy'])

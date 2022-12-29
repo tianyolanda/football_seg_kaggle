@@ -38,30 +38,36 @@ Train   |  Inference / Export
 
 Following models are supported:
 
-| model_name       | Base Model        | Segmentation Model |f_m_IU | m_IU  |
+| model_name       | Base Model        | Segmentation Model |f_m_IU | m_IU  | aug
 |------------------|-------------------|--------------------|-------|-------|
-| fcn_8            | Vanilla CNN       | FCN8               | 0.917 | 0.711 |
-| fcn_32           | Vanilla CNN       | FCN8               | 
-| fcn_8_vgg        | VGG 16            | FCN8               |
-| fcn_32_vgg       | VGG 16            | FCN32              |
-| fcn_8_resnet50   | Resnet-50         | FCN32              |
-| fcn_32_resnet50  | Resnet-50         | FCN32              |
-| fcn_8_mobilenet  | MobileNet         | FCN32              |
-| fcn_32_mobilenet | MobileNet         | FCN32              |
-| pspnet           | Vanilla CNN       | PSPNet             |
-| pspnet_50        | Vanilla CNN       | PSPNet             |
-| pspnet_101       | Vanilla CNN       | PSPNet             |
-| vgg_pspnet       | VGG 16            | PSPNet             |
-| resnet50_pspnet  | Resnet-50         | PSPNet             |
-| unet_mini        | Vanilla Mini CNN  | U-Net              |
-| unet             | Vanilla CNN       | U-Net              |
-| vgg_unet         | VGG 16            | U-Net              | 正在训 start1
-| resnet50_unet    | Resnet-50         | U-Net              |
-| mobilenet_unet   | MobileNet         | U-Net              |
-| segnet           | Vanilla CNN       | Segnet             |
-| vgg_segnet       | VGG 16            | Segnet             |
-| resnet50_segnet  | Resnet-50         | Segnet             | 待训 start2
-| mobilenet_segnet | MobileNet         | Segnet             |
+| fcn_8            | Vanilla CNN       | FCN8               |0.9017  0.6637
+| fcn_32           | Vanilla CNN       | FCN8               |0.8186  0.4939
+| fcn_8_vgg        | VGG 16            | FCN8               |0.8896  0.5544
+| fcn_32_vgg       | VGG 16            | FCN32              |0.8180  0.4976
+| fcn_8_resnet50   | Resnet-50         | FCN32              |0.9226  0.6832
+| fcn_32_resnet50  | Resnet-50         | FCN32              |0.8445  0.5281
+| fcn_8_mobilenet  | MobileNet         | FCN32              |0.9219  0.6999  ↑4
+| fcn_32_mobilenet | MobileNet         | FCN32              |0.8399  0.5176
+| pspnet           | Vanilla CNN       | PSPNet             |0.8234  0.4763
+| pspnet_50        | Vanilla CNN       | PSPNet             |0.9146  0.6799  ing
+| pspnet_101       | Vanilla CNN       | PSPNet             |0.8829  0.5928
+| vgg_pspnet       | VGG 16            | PSPNet             |0.7586  0.3811
+| resnet50_pspnet  | Resnet-50         | PSPNet             |0.8491  0.5269
+| unet_mini        | Vanilla Mini CNN  | U-Net              |0.9269  0.6745
+| unet             | Vanilla CNN       | U-Net              |0.9304  0.6955
+| vgg_unet         | VGG 16            | U-Net              |0.9448  0.7481
+| resnet50_unet    | Resnet-50         | U-Net              |0.9503  0.7659 
+| mobilenet_unet   | MobileNet         | U-Net              |0.9499  0.7814  ↑1.5
+| segnet           | Vanilla CNN       | Segnet             |0.8922  0.5835
+| vgg_segnet       | VGG 16            | Segnet             |0.8766  0.5405
+| resnet50_segnet  | Resnet-50         | Segnet             |0.9226  0.6609 
+| mobilenet_segnet | MobileNet         | Segnet             |0.9190  0.6782  -
+
+
+数据增强方式
+iaa.Affine(shear=(-5, 5)，, mode=symmetric)
+iaa.Affine(scale={"x": (1, 1.5), "y": (1, 1.5)}),
+iaa.Fliplr(0.5),  # horizontally flip 50% of all images
 
 
 Example results for the pre-trained models provided :

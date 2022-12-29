@@ -25,8 +25,8 @@ def model_from_checkpoint_path(checkpoints_path):
             ), "Checkpoint not found."
     model_config = json.loads(
         open(checkpoints_path+"_config.json", "r").read())
-    # checkpoints_path = '/Users/yutian/Desktop/kaggle/keras-seg/image-segmentation-keras-master/checkpoints/from_kaggle/vgg_unet.h5'
     latest_weights = find_latest_checkpoint(checkpoints_path)
+
     assert (latest_weights is not None), "Checkpoint not found."
     model = model_from_name[model_config['model_class']](
         model_config['n_classes'], input_height=model_config['input_height'],
@@ -39,6 +39,29 @@ def model_from_checkpoint_path(checkpoints_path):
 
     return model
 
+
+def model_from_checkpoint_path_v2(checkpoints_path):
+
+    from .models.all_models import model_from_name
+    assert (os.path.isfile(checkpoints_path+"_config.json")
+            ), "Checkpoint not found."
+    model_config = json.loads(
+        open(checkpoints_path+"_config.json", "r").read())
+    #latest_weights = find_latest_checkpoint(checkpoints_path)
+    latest_weights = 'kaggle/working/000_weight_large.h5'
+    print('latest_weights',latest_weights)
+
+    # assert (latest_weights is not None), "Checkpoint not found."
+    model = model_from_name[model_config['model_class']](
+        model_config['n_classes'], input_height=model_config['input_height'],
+        input_width=model_config['input_width'])
+    print("loaded weights ", latest_weights)
+    status = model.load_weights(latest_weights)
+
+    if status is not None:
+        status.expect_partial()
+
+    return model
 
 def get_colored_segmentation_image(seg_arr, n_classes, colors=class_colors):
     output_height = seg_arr.shape[0]
@@ -95,6 +118,7 @@ def concat_lenends(seg_img, legend_img):
 
     return out_img
 
+
 def visualize_segmentation(seg_arr, inp_img=None, n_classes=None,
                            colors=class_colors, class_names=None,
                            overlay_img=False, show_legends=False,
@@ -104,7 +128,7 @@ def visualize_segmentation(seg_arr, inp_img=None, n_classes=None,
         n_classes = np.max(seg_arr)
 
     color_list = [(0, 0, 0), # 背景: Background
-              (0, 159, 255), #  橘色: Team A
+              (0, 159, 255), #  橘色: Team A  # 不知道哪个队的守门员010图像中的守门员
               (47,255,173), # 绿色（改变），原 ：[1, 160, 255]橘色: Goalkeeper A  
               (0, 235, 255), #  黄: Team B
               (255, 255, 6), # 青蓝色 （改变）， 原：[3, 233, 254] 黄色: Goalkeeper B 
@@ -147,6 +171,7 @@ def visualize_segmentation(seg_arr, inp_img=None, n_classes=None,
 
     return seg_img
 
+
 def predict(model=None, inp=None, out_fname=None,
             checkpoints_path=None, overlay_img=False,
             class_names=None, show_legends=False, colors=class_colors,
@@ -165,11 +190,13 @@ def predict(model=None, inp=None, out_fname=None,
 
     assert (len(inp.shape) == 3 or len(inp.shape) == 1 or len(inp.shape) == 4), "Image should be h,w,3 "
 
+
     output_width = model.output_width
     output_height = model.output_height
     input_width = model.input_width
     input_height = model.input_height
     n_classes = model.n_classes
+    #print('output_width,output_height,input_width,input_height:',output_width,output_height,input_width,input_height)
 
     x = get_image_array(inp, input_width, input_height,
                         ordering=IMAGE_ORDERING)
@@ -182,7 +209,6 @@ def predict(model=None, inp=None, out_fname=None,
                                      class_names=class_names,
                                      prediction_width=prediction_width,
                                      prediction_height=prediction_height)
-
     if out_fname is not None:
         cv2.imwrite(out_fname, seg_img)
 
@@ -227,8 +253,9 @@ def predict_maps(model=None, inp=None, out_fname=None,
     # if out_fname is not None:
         # cv2.imwrite(out_fname, seg_img)
     seg_img = seg_img.astype('uint8')
-
+    
     return seg_img
+
 
 def predict_multiple(model=None, inps=None, inp_dir=None, out_dir=None,
                      checkpoints_path=None, overlay_img=False,
