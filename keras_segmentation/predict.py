@@ -48,7 +48,7 @@ def model_from_checkpoint_path_v2(checkpoints_path):
     model_config = json.loads(
         open(checkpoints_path+"_config.json", "r").read())
     #latest_weights = find_latest_checkpoint(checkpoints_path)
-    latest_weights = 'kaggle/working/000_weight_large.h5'
+    latest_weights = '/kaggle/working/000_weight_large.h5'
     print('latest_weights',latest_weights)
 
     # assert (latest_weights is not None), "Checkpoint not found."
