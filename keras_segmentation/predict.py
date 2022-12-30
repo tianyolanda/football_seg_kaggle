@@ -40,22 +40,26 @@ def model_from_checkpoint_path(checkpoints_path):
     return model
 
 
-def model_from_checkpoint_path_v2(checkpoints_path):
+def model_from_checkpoint_path_v2(config_path, checkpoints_path):
 
     from .models.all_models import model_from_name
-    assert (os.path.isfile(checkpoints_path+"_config.json")
-            ), "Checkpoint not found."
+    assert (os.path.isfile(config_path)
+            ), "Config not found."
     model_config = json.loads(
-        open(checkpoints_path+"_config.json", "r").read())
+        open(config_path, "r").read())
+    print('config_path exist,', config_path)
+
     #latest_weights = find_latest_checkpoint(checkpoints_path)
-    latest_weights = '/kaggle/working/000_weight_large.h5'
-    print('latest_weights',latest_weights)
+    latest_weights = checkpoints_path
+    assert (os.path.isfile(config_path)
+            ), "Checkpoint not found."
+    print('latest_weights exist,',checkpoints_path)
 
     # assert (latest_weights is not None), "Checkpoint not found."
     model = model_from_name[model_config['model_class']](
         model_config['n_classes'], input_height=model_config['input_height'],
         input_width=model_config['input_width'])
-    print("loaded weights ", latest_weights)
+    print('model',model)
     status = model.load_weights(latest_weights)
 
     if status is not None:
