@@ -10,10 +10,19 @@ import tensorflow as tf
 import glob
 import sys
 from tensorflow.keras import backend as K
-from .multiclass_losses import weighted_categorical_crossentropy, dice_coef_loss, soft_dice_loss, multiclass_weighted_tanimoto_loss, multiclass_weighted_dice_loss, multiclass_weighted_squared_dice_loss, multiclass_weighted_cross_entropy, multiclass_focal_loss
+from tensorflow.keras.utils import plot_model
+
+from .multiclass_losses import weighted_categorical_crossentropy, dice_coef_loss, soft_dice_loss, soft_dice_lossv2, \
+    multiclass_weighted_tanimoto_loss, multiclass_weighted_dice_loss, multiclass_weighted_squared_dice_loss, \
+    multiclass_weighted_cross_entropy, multiclass_focal_loss
+
+
+def myprint(s):
+    with open('model_summary/modelsummary.txt', 'a') as f:
+        print(s, file=f)
+
 
 def find_latest_checkpoint(checkpoints_path, fail_safe=True):
-
     # This is legacy code, there should always be a "checkpoint" file in your directory
 
     def get_epoch_number_from_path(path):
@@ -43,6 +52,7 @@ def find_latest_checkpoint(checkpoints_path, fail_safe=True):
                                   key=lambda f:
                                   int(get_epoch_number_from_path(f)))
     return latest_epoch_checkpoint
+
 
 def masked_categorical_crossentropy(gt, pr):
     from keras.losses import categorical_crossentropy
@@ -90,9 +100,9 @@ def train(model,
           other_inputs_paths=None,
           preprocessing=None,
           read_image_type=1  # cv2.IMREAD_COLOR = 1 (rgb),
-                             # cv2.IMREAD_GRAYSCALE = 0,
-                             # cv2.IMREAD_UNCHANGED = -1 (4 channels like RGBA)
-         ):
+          # cv2.IMREAD_GRAYSCALE = 0,
+          # cv2.IMREAD_UNCHANGED = -1 (4 channels like RGBA)
+          ):
     from .models.all_models import model_from_name
     # check if user gives model name instead of the model object
     if isinstance(model, six.string_types):
@@ -117,51 +127,56 @@ def train(model,
     if loss_fun is not None:
         assert (loss_class_weights is not None), "loss_class_weights not defined."
 
-        if loss_fun == 'weighted_categorical_crossentropy':
+        if loss_fun == 'weighted_categorical_crossentropy':  # ok
             loss_k = weighted_categorical_crossentropy(loss_class_weights)
 
-        elif loss_fun == 'dice_coef_loss':
-            loss_k = dice_coef_loss(loss_class_weights)
+        elif loss_fun == 'dice_coef_loss':  # ok
+            loss_k = dice_coef_loss
 
-        elif loss_fun == 'soft_dice_loss':
-            loss_k = soft_dice_loss(loss_class_weights)
+        elif loss_fun == 'soft_dice_loss':  # not ok
+            loss_k = soft_dice_loss
 
-        elif loss_fun == 'multiclass_weighted_tanimoto_loss':
+        elif loss_fun == 'soft_dice_lossv2':  # ok
+            loss_k = soft_dice_lossv2(loss_class_weights)  # must input smooth, e.g.2
+
+        elif loss_fun == 'multiclass_weighted_tanimoto_loss':  # ok
             loss_k = multiclass_weighted_tanimoto_loss(loss_class_weights)
 
-        elif loss_fun == 'multiclass_weighted_dice_loss':
+        elif loss_fun == 'multiclass_weighted_dice_loss':  # ok
             loss_k = multiclass_weighted_dice_loss(loss_class_weights)
 
-        elif loss_fun == 'multiclass_weighted_squared_dice_loss':
+        elif loss_fun == 'multiclass_weighted_squared_dice_loss':  # ok
             loss_k = multiclass_weighted_squared_dice_loss(loss_class_weights)
 
-        elif loss_fun == 'multiclass_weighted_cross_entropy':
+        elif loss_fun == 'multiclass_weighted_cross_entropy':  # ok
             loss_k = multiclass_weighted_cross_entropy(loss_class_weights)
 
-        elif loss_fun == 'multiclass_focal_loss':
-            assert (len(loss_class_weights) == 2 ), "loss_class_weights, gamma not defined."
+        elif loss_fun == 'multiclass_focal_loss':  # not ok, loss nan
+            assert (len(loss_class_weights) == 2), "loss_class_weights, gamma not defined."
             loss_k = multiclass_focal_loss(loss_class_weights[0], loss_class_weights[1])
 
         else:
             print('loss not defined')
 
-    else: 
+    else:
         if ignore_zero_class:
             loss_k = masked_categorical_crossentropy
         else:
             loss_k = 'categorical_crossentropy'
 
-                    
     if optimizer_name is not None:
         model.compile(loss=loss_k,
                       optimizer=optimizer_name,
                       metrics=['accuracy'])
+        # model.summary()
+        model.summary(print_fn=myprint)
+        plot_model(model, "MUNet.png", show_shapes=True)
 
     if checkpoints_path is not None:
         config_file = checkpoints_path + "_config.json"
         dir_name = os.path.dirname(config_file)
 
-        if ( not os.path.exists(dir_name) )  and len( dir_name ) > 0 :
+        if (not os.path.exists(dir_name)) and len(dir_name) > 0:
             os.makedirs(dir_name)
 
         with open(config_file, "w") as f:
@@ -203,7 +218,7 @@ def train(model,
             assert verified
 
     train_gen = image_segmentation_generator(
-        train_images, train_annotations,  batch_size,  n_classes,
+        train_images, train_annotations, batch_size, n_classes,
         input_height, input_width, output_height, output_width,
         do_augment=do_augment, augmentation_name=augmentation_name,
         custom_augmentation=custom_augmentation, other_inputs_paths=other_inputs_paths,
@@ -211,19 +226,19 @@ def train(model,
 
     if validate:
         val_gen = image_segmentation_generator(
-            val_images, val_annotations,  val_batch_size,
+            val_images, val_annotations, val_batch_size,
             n_classes, input_height, input_width, output_height, output_width,
             other_inputs_paths=other_inputs_paths,
             preprocessing=preprocessing, read_image_type=read_image_type)
 
-    if callbacks is None and (not checkpoints_path is  None) :
+    if callbacks is None and (not checkpoints_path is None):
         default_callback = ModelCheckpoint(
-                filepath=checkpoints_path + ".{epoch:05d}",
-                save_weights_only=True,
-                verbose=True
-            )
+            filepath=checkpoints_path + ".{epoch:05d}",
+            save_weights_only=True,
+            verbose=True
+        )
 
-        if sys.version_info[0] < 3: # for pyhton 2 
+        if sys.version_info[0] < 3:  # for pyhton 2
             default_callback = CheckpointsCallback(checkpoints_path)
 
         callbacks = [
