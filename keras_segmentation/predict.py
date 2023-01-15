@@ -131,7 +131,7 @@ def visualize_segmentation(seg_arr, inp_img=None, n_classes=None,
     if n_classes is None:
         n_classes = np.max(seg_arr)
 
-    color_list = [(0, 0, 0), # 背景: Background
+    color_list = [(126, 126, 137), # 灰色: Ground,
               (0, 159, 255), #  橘色: Team A  # 不知道哪个队的守门员010图像中的守门员
               (47,255,173), # 绿色（改变），原 ：[1, 160, 255]橘色: Goalkeeper A  
               (0, 235, 255), #  黄: Team B
@@ -141,14 +141,13 @@ def visualize_segmentation(seg_arr, inp_img=None, n_classes=None,
               (29, 0, 255), # 红色: Goal Bar
               (253, 48, 111), # 紫色: Audience
               (151, 71, 27), # 深蓝色: Advertisement
-              (126, 126, 137), # 灰色: Ground,
                      ]
     colors = color_list + colors
 
-    class_list = [0, 1,2,3,4,5,6,7,8,9,10]
-    class_name_list = ['Background', 'Team A', 'Team B', 'Goalkeeper A', 'Goalkeeper B',
+    class_list = [0,1,2,3,4,5,6,7,8,9]
+    class_name_list = [ 'Ground', 'Team A', 'Team B', 'Goalkeeper A', 'Goalkeeper B',
                     'Referee', 'Ball', 'Goal Bar', 'Audience', 
-                    'Advertisement', 'Ground']
+                    'Advertisement']
 
     seg_img = get_colored_segmentation_image(seg_arr, n_classes, colors=colors)
 

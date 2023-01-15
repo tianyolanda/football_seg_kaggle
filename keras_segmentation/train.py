@@ -10,17 +10,17 @@ import tensorflow as tf
 import glob
 import sys
 from tensorflow.keras import backend as K
-from tensorflow.keras.utils import plot_model
+# from tensorflow.keras.utils import plot_model
 
 from .multiclass_losses import weighted_categorical_crossentropy, dice_coef_loss, soft_dice_loss, soft_dice_lossv2, \
     multiclass_weighted_tanimoto_loss, multiclass_weighted_dice_loss, multiclass_weighted_squared_dice_loss, \
     multiclass_weighted_cross_entropy, multiclass_focal_loss
 
 
-def myprint(s):
-    with open('model_summary/modelsummary.txt', 'a') as f:
-        print(s, file=f)
-
+# def myprint(s):
+#     with open('model_summary/modelsummary.txt', 'a') as f:
+#         print(s, file=f)
+#
 
 def find_latest_checkpoint(checkpoints_path, fail_safe=True):
     # This is legacy code, there should always be a "checkpoint" file in your directory
@@ -169,9 +169,9 @@ def train(model,
                       optimizer=optimizer_name,
                       metrics=['accuracy'])
         # model.summary()
-        model.summary(print_fn=myprint)
-        plot_model(model, "MUNet.png", show_shapes=True)
-
+        # model.summary(print_fn=myprint)
+        # plot_model(model, "MUNet.png", show_shapes=True)
+    #
     if checkpoints_path is not None:
         config_file = checkpoints_path + "_config.json"
         dir_name = os.path.dirname(config_file)
