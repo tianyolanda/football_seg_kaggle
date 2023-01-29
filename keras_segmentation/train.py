@@ -12,7 +12,8 @@ import sys
 from tensorflow.keras import backend as K
 # from tensorflow.keras.utils import plot_model
 
-from .multiclass_losses import weighted_categorical_crossentropy, dice_coef_loss, soft_dice_loss, soft_dice_lossv2, \
+from .multiclass_losses import weighted_categorical_crossentropy, weighted_categorical_focal_loss, \
+    dice_coef_loss, soft_dice_loss, soft_dice_lossv2, \
     multiclass_weighted_tanimoto_loss, multiclass_weighted_dice_loss, multiclass_weighted_squared_dice_loss, \
     multiclass_weighted_cross_entropy, multiclass_focal_loss
 
@@ -76,7 +77,7 @@ def train(model,
           input_height=None,
           input_width=None,
           n_classes=None,
-          verify_dataset=True,
+          verify_dataset= False, # True,
           checkpoints_path=None,
           loss_fun=None,
           loss_class_weights=None,
@@ -129,6 +130,10 @@ def train(model,
 
         if loss_fun == 'weighted_categorical_crossentropy':  # ok
             loss_k = weighted_categorical_crossentropy(loss_class_weights)
+
+        elif loss_fun == 'weighted_categorical_focal_loss':  # ok
+            assert (len(loss_class_weights) == 2), "loss_class_weights, gamma not defined."
+            loss_k = weighted_categorical_focal_loss(loss_class_weights[0], loss_class_weights[1])
 
         elif loss_fun == 'dice_coef_loss':  # ok
             loss_k = dice_coef_loss

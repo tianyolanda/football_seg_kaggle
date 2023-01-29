@@ -28,12 +28,60 @@ def weighted_categorical_crossentropy(weights):
     weights = K.variable(weights)
 
     def loss(y_true, y_pred):
+        print('-----')
+        print('y_pred',y_pred)
+        print('y_true',y_true)
+
+        y_pred /= K.sum(y_pred, axis=-1, keepdims=True)
+        print('1, y_pred', y_pred)
+
+        # clip to prevent NaN's and Inf's
+        y_pred = K.clip(y_pred, K.epsilon(), 1 - K.epsilon())
+        print('2, y_pred', y_pred)
+
+        # calc
+        loss = y_true * K.log(y_pred) * weights
+        print('3, loss', loss)
+        loss = -K.sum(loss, -1)
+        print('4, loss', loss)
+
+        return loss
+
+    return loss
+
+def weighted_categorical_focal_loss(weights, gamma):
+    """
+    A weighted version of keras.objectives.categorical_crossentropy
+
+
+    Variables:
+        weights: numpy array of shape (C,) where C is the number of classes
+
+    Usage:
+        weights = np.array([0.5,2,10]) # Class one at 0.5, class 2 twice the normal weights, class 3 10x.
+        loss = weighted_categorical_crossentropy(weights)
+        model.compile(loss=loss,optimizer='adam')
+    """
+    # weights[8:] = 0.5
+    # weights[6] = 10
+    # weights = K.variable(weights)
+
+    # def loss(y_true, y_pred):
+    # scale predictions so that the class probas of each sample sum to 1
+    weights = K.variable(weights)
+    gamma = K.variable(gamma)
+
+    def loss(y_true, y_pred):
+
         y_pred /= K.sum(y_pred, axis=-1, keepdims=True)
         # clip to prevent NaN's and Inf's
         y_pred = K.clip(y_pred, K.epsilon(), 1 - K.epsilon())
+
         # calc
-        loss = y_true * K.log(y_pred) * weights
+        # loss = y_true * K.log(y_pred) * weights
+        loss = y_true * K.log(y_pred) * weights * (1-y_pred) ** gamma
         loss = -K.sum(loss, -1)
+
         return loss
 
     return loss
@@ -244,3 +292,5 @@ def multiclass_focal_loss(class_weights: Union[list, np.ndarray, tf.Tensor],
         return f_loss
 
     return loss
+
+
